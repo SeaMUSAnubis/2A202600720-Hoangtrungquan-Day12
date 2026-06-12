@@ -37,7 +37,7 @@ jobs:
         AGENT_API_KEY: my-secret-key
       run: |
         cd 06-lab-complete
-        PYTHONPATH=.. pytest tests/
+        PYTHONPATH=. pytest tests/
 
     - name: Test custom_web_app backend
       env:
@@ -45,7 +45,7 @@ jobs:
         AGENT_API_KEY: my-secret-key
       run: |
         cd custom_web_app/backend
-        PYTHONPATH=.. pytest tests/
+        PYTHONPATH=. pytest tests/
 
   react-frontend:
     runs-on: ubuntu-latest
@@ -53,9 +53,9 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18.x'
+        node-version: '20.x'
         
     - name: Install and Build Frontend
       run: |
