@@ -29,11 +29,16 @@ def supervisor_node(state: AgentState):
     
     last_message = messages[-1].content.lower()
     
-    if "thuế" in last_message and "TaxWorker" not in [m.content for m in messages]:
+    content_list = [m.content for m in messages]
+    has_tax = any("[Tax Worker" in c for c in content_list)
+    has_comp = any("[Compliance Worker" in c for c in content_list)
+    has_legal = any("[Legal Worker" in c for c in content_list)
+
+    if "thuế" in last_message and not has_tax:
         next_worker = "TaxWorker"
-    elif "tuân thủ" in last_message and "ComplianceWorker" not in [m.content for m in messages]:
+    elif "tuân thủ" in last_message and not has_comp:
         next_worker = "ComplianceWorker"
-    elif any(k in last_message for k in ["tù", "phạt", "ma túy", "luật", "quy định", "chính sách", "nghỉ phép"]) and "LegalWorker" not in [m.content for m in messages]:
+    elif any(k in last_message for k in ["tù", "phạt", "ma túy", "luật", "quy định", "chính sách", "nghỉ phép"]) and not has_legal:
         next_worker = "LegalWorker"
     else:
         next_worker = "FINISH"

@@ -42,7 +42,7 @@ def legal_worker_node(state):
         # 3. Generation (LLM)
         llm = ChatOpenAI(
             temperature=0, 
-            model="openrouter/free", 
+            model="openrouter/auto", 
             openai_api_key=api_key, 
             openai_api_base="https://openrouter.ai/api/v1"
         )

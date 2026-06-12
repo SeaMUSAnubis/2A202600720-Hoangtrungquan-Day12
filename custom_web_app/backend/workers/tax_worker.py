@@ -14,7 +14,7 @@ def tax_worker_node(state):
     try:
         llm = ChatOpenAI(
             temperature=0, 
-            model="openrouter/free", 
+            model="openrouter/auto", 
             openai_api_key=api_key, 
             openai_api_base="https://openrouter.ai/api/v1"
         )
