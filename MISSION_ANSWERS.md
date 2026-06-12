@@ -1,8 +1,7 @@
-# Day 12 Lab - Mission Answers
+> **Student Name:** Hoàng Trung Quân
+> **Student ID:** 2A202600720
+> **Date:** 13/06/2026
 
-Tài liệu này cung cấp các câu trả lời chi tiết cho các phần bài tập thực hành trong Lab 12, phân tích sâu các khái niệm về Cloud Infrastructure, Security và Deployment.
-
----
 
 ## Part 1: Localhost vs Production (10 Points)
 

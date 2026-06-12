@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest httpx
+        if [ -f 06-lab-complete/requirements.txt ]; then pip install -r 06-lab-complete/requirements.txt; fi
+        if [ -f custom_web_app/backend/requirements.txt ]; then pip install -r custom_web_app/backend/requirements.txt; fi
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 06-lab-complete custom_web_app/backend --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 06-lab-complete custom_web_app/backend --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Test 06-lab-complete backend
+      env:
+        REDIS_URL: redis://localhost:6379
+        AGENT_API_KEY: my-secret-key
+      run: |
+        cd 06-lab-complete
+        PYTHONPATH=.. pytest tests/
+
+    - name: Test custom_web_app backend
+      env:
+        REDIS_URL: redis://localhost:6379
+        AGENT_API_KEY: my-secret-key
+      run: |
+        cd custom_web_app/backend
+        PYTHONPATH=.. pytest tests/
+
+  react-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        
+    - name: Install and Build Frontend
+      run: |
+        cd custom_web_app/frontend
+        npm install
+        npm run build
