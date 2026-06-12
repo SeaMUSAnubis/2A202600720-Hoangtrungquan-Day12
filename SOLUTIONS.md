@@ -44,7 +44,7 @@ Trong một ứng dụng AI Agent chạy nội bộ cơ bản, có rất nhiều
 ## Part 3: Cloud Deployment (10 Points)
 
 ### Exercise 3.1: Thông tin triển khai Railway/Render
-- **Public URL**: *https://hoangtrungquan-lab12-agent-production.up.railway.app/*
+- **Public URL**: *https://blissful-magic-production-e872.up.railway.app/*
 - Vui lòng tham khảo  thư mục `screenshots/` để xem minh chứng triển khai thành công lên nền tảng đám mây.
 
 ---
