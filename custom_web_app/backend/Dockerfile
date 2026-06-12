@@ -18,6 +18,7 @@ RUN useradd -m appuser
 USER appuser
 
 ENV PORT=8000
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
 CMD ["python", "main.py"]
