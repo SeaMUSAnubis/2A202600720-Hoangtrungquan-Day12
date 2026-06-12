@@ -89,6 +89,8 @@ async def chat(request: ChatRequest, x_api_key: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Missing API Key. Vui lòng cung cấp OpenRouter API Key qua giao diện cài đặt.")
 
     query = request.query
+    logger.info(f"Received chat request: {query}")
+    logger.info(f"API Key present: {bool(x_api_key)}")
     
     # Run the multi-agent workflow
     final_state = await run_workflow(query, api_key=x_api_key)
@@ -113,4 +115,5 @@ if __name__ == "__main__":
     import uvicorn
     import os
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Listen on all IPv4 and IPv6 addresses
+    uvicorn.run(app, host="::", port=port)
