@@ -115,5 +115,5 @@ if __name__ == "__main__":
     import uvicorn
     import os
     port = int(os.environ.get("PORT", 8000))
-    # Listen on all IPv4 and IPv6 addresses
-    uvicorn.run(app, host="::", port=port)
+    # Listen on all IPv4
+    uvicorn.run(app, host="0.0.0.0", port=port)
