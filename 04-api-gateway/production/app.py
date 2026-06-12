@@ -81,7 +81,8 @@ async def security_headers(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     # Ẩn server info
-    response.headers.pop("server", None)
+    if "server" in response.headers:
+        del response.headers["server"]
     return response
 
 
@@ -149,14 +150,15 @@ async def ask_agent(
     # ✅ Ghi nhận usage (mock token count)
     input_tokens = len(body.question.split()) * 2
     output_tokens = len(response_text.split()) * 2
-    usage = cost_guard.record_usage(username, input_tokens, output_tokens)
+    cost_guard.record_usage(username, input_tokens, output_tokens)
+    usage = cost_guard.get_usage(username)
 
     return {
         "question": body.question,
         "answer": response_text,
         "usage": {
             "requests_remaining": rate_info["remaining"],
-            "budget_remaining_usd": usage.total_cost_usd,
+            "budget_remaining_usd": usage["budget_remaining_usd"],
         },
     }
 
@@ -174,7 +176,7 @@ def admin_stats(user: dict = Depends(verify_token)):
         raise HTTPException(403, "Admin only")
     return {
         "total_users": "N/A (in-memory demo)",
-        "global_cost_usd": cost_guard._global_cost,
+        "global_cost_usd": cost_guard._get_global_cost(),
         "global_budget_usd": cost_guard.global_daily_budget_usd,
     }
 
