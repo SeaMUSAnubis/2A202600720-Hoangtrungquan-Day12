@@ -1,7 +1,6 @@
 > **Student Name:** Hoàng Trung Quân
 > **Student ID:** 2A202600720
-> **Date:** 13/06/2026
-
+> **Date:** 2026-06-12
 
 ## Part 1: Localhost vs Production (10 Points)
 
