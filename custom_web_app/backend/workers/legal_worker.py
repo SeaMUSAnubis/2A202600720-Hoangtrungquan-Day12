@@ -6,9 +6,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 def get_chroma_collection():
-    # Calculate path to day10/lab/chroma_db
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__))) # day10/web_app/backend -> day10
-    db_path = os.path.join(base_dir, "lab", "chroma_db")
+    # Thư mục chứa legal_worker.py
+    base_dir = os.path.dirname(os.path.dirname(__file__)) 
+    db_path = os.path.join(base_dir, "chroma_db")
     
     client = chromadb.PersistentClient(path=db_path)
     emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
@@ -22,6 +22,7 @@ def legal_worker_node(state):
     """
     messages = state["messages"]
     last_message = messages[-1].content
+    api_key = state.get("api_key", "")
     
     try:
         # 1. Retrieval
@@ -39,7 +40,12 @@ def legal_worker_node(state):
             context = "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu."
             
         # 3. Generation (LLM)
-        llm = ChatOpenAI(temperature=0, model="gpt-4o-mini")
+        llm = ChatOpenAI(
+            temperature=0, 
+            model="openrouter/free", 
+            openai_api_key=api_key, 
+            openai_api_base="https://openrouter.ai/api/v1"
+        )
         prompt = ChatPromptTemplate.from_messages([
             ("system", "Bạn là Legal Worker, chuyên gia pháp lý và chính sách nội bộ. Hãy trả lời câu hỏi dựa trên ngữ cảnh sau:\n\n{context}\n\nNếu ngữ cảnh không có thông tin, hãy nói rõ là không có thông tin trong CSDL."),
             ("human", "{question}")

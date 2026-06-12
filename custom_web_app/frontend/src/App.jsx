@@ -54,6 +54,11 @@ export default function App() {
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
+    if (!apiKey) {
+        setShowSettings(true);
+        return;
+    }
+
     const currentInput = inputValue.trim();
     const userMessage = { id: Date.now(), sender: 'user', text: currentInput };
 
@@ -65,8 +70,11 @@ export default function App() {
     setActiveAgent('system');
     
     try {
-      // Gọi API Backend của chúng ta
-      const response = await axios.post('/api/chat', { query: currentInput });
+      // Gọi API Backend của chúng ta và truyền API Key qua Header
+      const response = await axios.post('/api/chat', 
+        { query: currentInput },
+        { headers: { 'X-API-Key': apiKey } }
+      );
       
       const { text, agentType, citations } = response.data;
       

@@ -1,6 +1,6 @@
 import time
 import logging
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -81,14 +81,17 @@ class AgentResponse(BaseModel):
     citations: Optional[List[Citation]] = None
 
 @app.post("/api/chat", response_model=AgentResponse)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, x_api_key: Optional[str] = Header(None)):
     """
     Sử dụng LangGraph StateGraph để xử lý câu hỏi với đa tác nhân.
     """
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="Missing API Key. Vui lòng cung cấp OpenRouter API Key qua giao diện cài đặt.")
+
     query = request.query
     
     # Run the multi-agent workflow
-    final_state = await run_workflow(query)
+    final_state = await run_workflow(query, api_key=x_api_key)
     
     # Gộp các câu trả lời từ các agents (bỏ qua HumanMessage đầu tiên)
     agent_messages = [msg.content for msg in final_state["messages"][1:]]

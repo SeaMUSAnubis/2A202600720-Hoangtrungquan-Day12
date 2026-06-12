@@ -17,6 +17,7 @@ from workers.compliance_worker import compliance_worker_node
 class AgentState(TypedDict):
     messages: list[BaseMessage]
     next: str
+    api_key: str
 
 # --- 2. Define Supervisor ---
 def supervisor_node(state: AgentState):
@@ -40,13 +41,14 @@ def supervisor_node(state: AgentState):
     return {"next": next_worker}
 
 # --- 3. Pure Python Workflow Runner ---
-async def run_workflow(query: str):
+async def run_workflow(query: str, api_key: str = ""):
     """
     Hàm chạy workflow bằng Pure Python thay vì langgraph để tránh lỗi dependency.
     """
     state: AgentState = {
         "messages": [HumanMessage(content=query)],
-        "next": "Supervisor"
+        "next": "Supervisor",
+        "api_key": api_key
     }
     
     workers = {
