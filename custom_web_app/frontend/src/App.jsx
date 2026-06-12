@@ -51,44 +51,8 @@ export default function App() {
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
   };
 
-  const callOpenRouter = async (systemPrompt, userMsg) => {
-    if (!apiKey) return "Vui lòng nhập API Key trong phần Cài đặt để tôi có thể suy nghĩ!";
-    
-    try {
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'openrouter/free',
-          max_tokens: 1500,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMsg }
-          ]
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'http://localhost:5173',
-            'X-Title': 'Legal AI Hub'
-          }
-        }
-      );
-      return response.data.choices[0].message.content;
-    } catch (error) {
-      console.error(error);
-      const errorMsg = error.response?.data?.error?.message || error.message;
-      return "Lỗi API: " + errorMsg;
-    }
-  };
-
   const handleSend = async () => {
     if (!inputValue.trim()) return;
-
-    if (!apiKey) {
-        setShowSettings(true);
-        return;
-    }
 
     const currentInput = inputValue.trim();
     const userMessage = { id: Date.now(), sender: 'user', text: currentInput };
@@ -98,58 +62,38 @@ export default function App() {
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     
     setIsTyping(true);
-    
-    // --- STEP 1: SUPERVISOR ROUTING ---
     setActiveAgent('system');
-    const supervisorPrompt = `Bạn là Supervisor phân loại câu hỏi. 
-Chỉ trả về 1 chữ duy nhất (law, tax, hoặc compliance) dựa trên quy tắc sau:
-- 'tax': nếu câu hỏi có từ khóa trốn thuế, thuế, hóa đơn, tài chính, kế toán.
-- 'compliance': nếu câu hỏi về PCCC, an toàn lao động, giấy phép kinh doanh.
-- 'law': các vấn đề luật pháp chung, hình sự, ma tuý, đi tù, giám đốc chịu trách nhiệm hình sự.`;
     
-    let rawResponse = await callOpenRouter(supervisorPrompt, currentInput);
-    let routedTo = rawResponse.toLowerCase();
-    
-    // Xử lý chuỗi trả về để trích xuất đúng Agent
-    if (routedTo.includes('tax') || currentInput.toLowerCase().includes('thuế') || currentInput.toLowerCase().includes('trốn thuê')) {
-        routedTo = 'tax';
-    } else if (routedTo.includes('compliance') || currentInput.toLowerCase().includes('tuân thủ') || currentInput.toLowerCase().includes('pccc')) {
-        routedTo = 'compliance';
-    } else {
-        routedTo = 'law'; // Fallback
+    try {
+      // Gọi API Backend của chúng ta
+      const response = await axios.post('/api/chat', { query: currentInput });
+      
+      const { text, agentType, citations } = response.data;
+      
+      setActiveAgent('customer');
+      setTimeout(() => {
+          setIsTyping(false);
+          setActiveAgent('none');
+          setMessages(prev => [...prev, {
+              id: Date.now() + 1,
+              sender: 'agent',
+              agentType: agentType || 'customer',
+              text: text,
+              citations: citations
+          }]);
+      }, 500);
+
+    } catch (error) {
+      console.error(error);
+      setIsTyping(false);
+      setActiveAgent('none');
+      setMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          sender: 'agent',
+          agentType: 'system',
+          text: "Lỗi kết nối Backend: " + (error.response?.data?.detail || error.message)
+      }]);
     }
-
-    // --- STEP 2: WORKER PROCESSING ---
-    setActiveAgent(routedTo);
-    
-    let workerPrompt = "";
-    if (routedTo === 'law') {
-        workerPrompt = "Bạn là Luật sư (Law Agent) am hiểu Luật Hình sự và Doanh nghiệp Việt Nam. Hãy phân tích trách nhiệm pháp lý một cách rõ ràng, dễ hiểu.";
-    } else if (routedTo === 'tax') {
-        workerPrompt = "Bạn là Chuyên gia Thuế (Tax Agent) am hiểu Luật Quản lý Thuế, kế toán doanh nghiệp, xử phạt hành chính và hình sự về trốn thuế tại Việt Nam.";
-    } else {
-        workerPrompt = "Bạn là Chuyên gia Tuân thủ (Compliance Agent) tư vấn về thủ tục, giấy phép kinh doanh.";
-    }
-
-    const workerAnswer = await callOpenRouter(workerPrompt, currentInput);
-
-    // --- STEP 3: END AGENT (SUMMARIZER) ---
-    setActiveAgent('summarizer');
-    const summarizerPrompt = "Bạn là End Agent (Chuyên gia Tóm tắt). Nhiệm vụ của bạn là đọc câu trả lời chuyên môn từ các chuyên gia khác và tóm tắt, diễn đạt lại bằng ngôn ngữ đời thường, ngắn gọn, cực kỳ dễ hiểu cho người bình thường (non-expert). Không dùng từ ngữ quá hàn lâm. Hãy format lại cho đẹp và thân thiện.";
-    
-    const finalAnswer = await callOpenRouter(summarizerPrompt, `Câu hỏi của khách: ${currentInput}\n\nTrích xuất chuyên môn:\n${workerAnswer}`);
-
-    setActiveAgent('customer');
-    setTimeout(() => {
-        setIsTyping(false);
-        setActiveAgent('none');
-        setMessages(prev => [...prev, {
-            id: Date.now() + 1,
-            sender: 'agent',
-            agentType: routedTo,
-            text: finalAnswer
-        }]);
-    }, 500);
   };
 
   const handleKeyDown = (e) => {
