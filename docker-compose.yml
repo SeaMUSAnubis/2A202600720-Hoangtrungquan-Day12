@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  backend:
+    build: 
+      context: ./custom_web_app/backend
+      dockerfile: Dockerfile
+    environment:
+      - PORT=8000
+    # Add env vars for API keys or OpenAI key if needed
+
+  frontend:
+    build:
+      context: ./custom_web_app/frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+
+  api-gateway:
+    build:
+      context: ./custom_web_app/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
